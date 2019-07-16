@@ -72,7 +72,7 @@ public class MainVerticle extends AbstractVerticle {
 
     router.post("/service").handler(req -> {
       JsonObject jsonBody = req.getBodyAsJson();
-      dataService.addService(jsonBody.getString("url")).setHandler(queryResult -> {
+      dataService.addService(jsonBody.getString("name"),jsonBody.getString("url")).setHandler(queryResult -> {
         if(queryResult.succeeded())
           req.response()
                   .setStatusCode(200)

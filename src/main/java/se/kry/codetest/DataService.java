@@ -14,9 +14,9 @@ class DataService {
 		this.connector = connector;
 	}
 
-	 Future<Void> addService(String service) {
+	 Future<Void> addService(String name, String url) {
 	 	Future<Void> result = Future.future();
-		 connector.query("INSERT INTO service(url) VALUES(?)", new JsonArray().add(service)).setHandler(done ->{
+		 connector.query("INSERT INTO service(name, url) VALUES(?,?)", new JsonArray().add(name).add(url)).setHandler(done ->{
 			if(done.succeeded())
 				result.complete();
 			else
