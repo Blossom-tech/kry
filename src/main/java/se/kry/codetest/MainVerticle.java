@@ -84,5 +84,20 @@ public class MainVerticle extends AbstractVerticle {
                         .put("error", queryResult.cause().getMessage()).encode());
       });
     });
+
+    router.put("/service").handler(req -> {
+      String serviceUrl = req.queryParam("url").get(0);
+      dataService.deleteService(serviceUrl).setHandler(queryResult -> {
+        if(queryResult.succeeded())
+          req.response()
+                  .setStatusCode(200)
+                  .end();
+        else
+          req.response()
+                  .setStatusCode(500)
+                  .end(new JsonObject()
+                          .put("error", queryResult.cause().getMessage()).encode());
+      });
+    });
   }
 }
