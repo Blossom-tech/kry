@@ -18,10 +18,13 @@ public class MainVerticle extends AbstractVerticle {
   //TODO use this
   private DBConnector connector;
   private BackgroundPoller poller = new BackgroundPoller();
+  private DataService dataService;
 
   @Override
   public void start(Future<Void> startFuture) {
     connector = new DBConnector(vertx);
+    dataService = new DataService(connector);
+
     Router router = Router.router(vertx);
     router.route().handler(BodyHandler.create());
     services.put("https://www.kry.se", "UNKNOWN");
@@ -42,6 +45,7 @@ public class MainVerticle extends AbstractVerticle {
 
   private void setRoutes(Router router){
     router.route("/*").handler(StaticHandler.create());
+
     router.get("/service").handler(req -> {
       List<JsonObject> jsonServices = services
           .entrySet()
@@ -51,20 +55,34 @@ public class MainVerticle extends AbstractVerticle {
                   .put("name", service.getKey())
                   .put("status", service.getValue()))
           .collect(Collectors.toList());
-      req.response()
-          .putHeader("content-type", "application/json")
-          .end(new JsonArray(jsonServices).encode());
+
+      dataService.getAllServices().setHandler(queryResult -> {
+        if(queryResult.succeeded()){
+          req.response()
+                  .putHeader("content-type", "application/json")
+                  .end(new JsonArray(queryResult.result()).encode());
+        }else
+          req.response()
+                  .setStatusCode(500)
+                  .putHeader("content-type", "application/json")
+                  .end(new JsonObject().put("error", queryResult.cause().getMessage()).encode());
+
+      });
     });
+
     router.post("/service").handler(req -> {
       JsonObject jsonBody = req.getBodyAsJson();
-      services.put(jsonBody.getString("url"), "UNKNOWN");
-      req.response()
-          .putHeader("content-type", "text/plain")
-          .end("OK");
+      dataService.addService(jsonBody.getString("url")).setHandler(queryResult -> {
+        if(queryResult.succeeded())
+          req.response()
+                  .setStatusCode(200)
+                  .end();
+        else
+          req.response()
+                  .setStatusCode(500)
+                  .end(new JsonObject()
+                        .put("error", queryResult.cause().getMessage()).encode());
+      });
     });
   }
-
 }
-
-
-
