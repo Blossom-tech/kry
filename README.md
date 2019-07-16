@@ -42,3 +42,35 @@ You can also run gradle directly from the command line:
 ```
 ./gradlew clean run
 ```
+
+# Progress
+####since the time is limited, I managed to fix the critical issues but here are some ideas on how to go forward with the backend wish-list:
+
+_**- Simultaneous writes sometimes causes strange behavior:**_
+    A suggestion is to use Database Transactions or Resource Locking to prevent strange behaviours. 
+    
+_**- Protect the poller from misbehaving services (for example answering really slowly):**_
+    We can set connection timeout and consider polling is failed for that service if timeout occurs.
+    
+_**-Service URL's are not validated in any way ("sdgf" is probably not a valid service):**_
+    Use regex validation or a third party library for url validation.
+
+_**- A user (with a different cookie/local storage) should not see the services added by another user:**_
+    We can use the session ID to hash data before sending back to our front-end client and it can
+    be decrypted in front end. Or we can save the session ID in our database and filter data with
+    that session before serving it to the front end.(only optimal for limited time of usage)
+     
+**Note:**
+    I mainly focused on getting the functionality fixed during the limited time
+    available and so I opted in some cases for solutions that can be considered not the most optimal
+    ones but yet they are good enough to do the job. And given the fact it is the first time for me to 
+    have hands on Vert.x I had some issues that held me back a little bit but it was fun to resolve them. 
+    Having said that, if I had more time, these are some things I would do in a better way:
+    
+        - use better database migrations frameworks like FlywayDB or similar.
+        - implement better Exception Handlers.
+        - implement a data layer and business models to abstract our data models.
+        - abstract the server router into different components (authentication layer, validation layer etc...)
+        - write unit tests to mock some services and to simulate handling incoming http requests.
+        - clean up and refactoring.
+     
