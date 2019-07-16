@@ -5,6 +5,8 @@ import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.StaticHandler;
 
@@ -17,18 +19,21 @@ public class MainVerticle extends AbstractVerticle {
   private HashMap<String, String> services = new HashMap<>();
   //TODO use this
   private DBConnector connector;
-  private BackgroundPoller poller = new BackgroundPoller();
+  private BackgroundPoller poller;
   private DataService dataService;
-
+  private WebClient webClient;
   @Override
   public void start(Future<Void> startFuture) {
     connector = new DBConnector(vertx);
     dataService = new DataService(connector);
+    webClient = WebClient.create(vertx,new WebClientOptions().setVerifyHost(false).setSsl(false).setTrustAll(true));
+
+    poller = new BackgroundPoller(dataService, webClient);
+    vertx.setPeriodic(1000*10, timerId -> poller.pollServices(services));
 
     Router router = Router.router(vertx);
     router.route().handler(BodyHandler.create());
     services.put("https://www.kry.se", "UNKNOWN");
-    vertx.setPeriodic(1000 * 60, timerId -> poller.pollServices(services));
     setRoutes(router);
     vertx
         .createHttpServer()

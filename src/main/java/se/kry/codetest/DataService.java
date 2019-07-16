@@ -48,4 +48,15 @@ class DataService {
 		});
 		return result;
 	}
+
+	Future<Void> updateServiceStatus(String serviceURL, Boolean status) {
+		Future<Void> result = Future.future();
+		connector.query("UPDATE service SET status = ? where url = ?", new JsonArray().add(status).add(serviceURL)).setHandler(done ->{
+			if(done.succeeded())
+				result.complete();
+			else
+				result.fail(done.cause());
+		});
+		return result;
+	}
 }
